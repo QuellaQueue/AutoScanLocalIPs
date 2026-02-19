@@ -1,10 +1,21 @@
 #Checks for active network connections
 $activeadapters = get-netadapter | Where-Object {$_.status -eq "Up"}
 $possibleips = 1..255
-
 #Now we wipe our save file
 $savelocation = Join-Path -Path $PSScriptRoot -ChildPath "nearbyips.txt"
 "" > $savelocation
+
+$testipandsaveJob = {
+    #pulls in the global/loop variables needed to save info and ping. P is appended to the var names to specify this is the parallel version of the variable
+                    $savelocationP = $using:savelocation
+                    $targetaddressP = $using:targetaddress
+
+                    $result = (Test-Connection -count 1 -targetname ($targetaddressP)).Status 
+                    if ($result -eq "Success"){
+                        Write-output "Success on $targetaddressP"
+                        $targetaddressP >> $savelocationP
+                    }
+}
 
 #Main Loop
 foreach($adapter in $activeadapters){
@@ -29,17 +40,14 @@ foreach($adapter in $activeadapters){
     }
 
     #Checks all possible IPs on the subnet and records any that respond
+    #Start-job allows the loop to continue progressing without awaiting ping responses. Does not //super\\ dramatically improve performance, but it does noticably reduce runtime.
     switch($subnetmask){
         8{   
             foreach($ip1 in $possibleips){ 
                 foreach($ip2 in $possibleips){
                     foreach($ip3 in $possibleips){  
                         $targetaddress = $ipwhack8 + "." + $ip1 + "." + $ip2 + "." + $ip3
-                        $result = (Test-Connection -count 1 -targetname $targetaddress).Status
-                        if ($result -eq "Success"){
-                            Write-output "Success on $targetaddress"
-                            $targetaddress >> $savelocation
-                        }
+                        Start-job -ScriptBlock $testipandsaveJob | Out-null
                     }
                 }    
             }
@@ -48,23 +56,15 @@ foreach($adapter in $activeadapters){
             foreach($ip2 in $possibleips){
                 foreach($ip3 in $possibleips){
                     $targetaddress = $ipwhack8 + "." + $ipwhack16 + "." + $ip2 + "." + $ip3
-                    $result = (Test-Connection -count 1 -targetname $targetaddress).Status
-                    if ($result -eq "Success"){
-                        Write-output "Success on $targetaddress"
-                        $targetaddress >> $savelocation
-                    }
+                    Start-job -ScriptBlock $testipandsaveJob | Out-null
                 }
             }    
         }
         24{
             foreach($ip in $possibleips){
-                #pulls in the global variables
                 $targetaddress = $ipwhack8 + "." + $ipwhack16 + "." + $ipwhack24 + "." + $ip
-                $result = (Test-Connection -count 1 -targetname ($targetaddress)).Status 
-                if ($result -eq "Success"){
-                    Write-output "Success on $targetaddress"
-                    $targetaddress >> $savelocation
-                }
+                
+                Start-job -ScriptBlock $testipandsaveJob | Out-null
             }
                    
             
