@@ -12,4 +12,8 @@ Steps are broken down as follows
 
 
 Notes:
+
 -Tried swapping this to run in parallel, but due to parallelization requiring far too much of an overhead for a tiny improvement to run-time, I will be reverting the script's loops back to sequential instead. Pretty sure I could force each ping and write to the file to run in asyncronous jobs, but will look into this after swapping back to sequential to get rid of the code clutter.
+
+Changelog: 
+-Swapped the parallel loops for a loop using start-job for more control over what exactly is running in parallel + code cleanup
