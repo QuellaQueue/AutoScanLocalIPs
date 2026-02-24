@@ -17,3 +17,14 @@ Notes:
 
 Changelog: 
 -Swapped the parallel loops for a loop using start-job for more control over what exactly is running in parallel + code cleanup
+
+
+# AutoScanLocalIPs ALT
+
+This script is the same as above, however it's set up to conver the IP address and subnetmask into binary so classless networks can be scanned as well. (/9, /22, /13 etc.)
+
+Script is not fully functional
+
+-TODO:
+Use the binary mask to search IPs on the network. Not sure yet how I want to proceed with this as there's a few different methods easily available.
+1. Take the split up subnetmask, and mark which octet ends the prefix. Then iterate on that octet and the following octets through the full list of remaining values. Limit changes to the binary valu
